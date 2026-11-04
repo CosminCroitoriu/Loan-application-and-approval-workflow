@@ -16,7 +16,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.loanworkflow.approval.Role;
 import com.loanworkflow.approval.User;
+import com.loanworkflow.scoring.CreditProfile;
 import com.loanworkflow.scoring.RuleBasedScoringStrategy;
+import com.loanworkflow.scoring.ScoreResult;
 
 @RestController
 public class LoanController {
@@ -59,6 +61,15 @@ public class LoanController {
         LoanService loan = find(id);
         loan.checkDocuments();
         return toResponse(id, loan);
+    }
+
+    // The applicant's finances are scored; a HIGH risk loan is rejected right away
+    @PostMapping("/loans/{id}/score")
+    public ScoreResponse score(@PathVariable String id, @RequestBody CreditProfile profile) {
+        LoanService loan = find(id);
+        loan.score(profile);
+        ScoreResult result = loan.scoreResult();
+        return new ScoreResponse(id, loan.loan().status(), result.score(), result.risk());
     }
 
     private LoanService find(String id) {
