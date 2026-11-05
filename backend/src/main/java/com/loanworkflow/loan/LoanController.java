@@ -26,6 +26,9 @@ public class LoanController {
     public record CreateLoanRequest(String applicant, BigDecimal amount) {
     }
 
+    public record ApproveRequest(String approver) {
+    }
+
     private final LoanRepository repository;
 
     public LoanController(LoanRepository repository) {
@@ -70,6 +73,25 @@ public class LoanController {
         loan.score(profile);
         ScoreResult result = loan.scoreResult();
         return new ScoreResponse(id, loan.loan().status(), result.score(), result.risk());
+    }
+
+    // An approver signs off. Large loans need two different approvers.
+    @PostMapping("/loans/{id}/approve")
+    public LoanResponse approve(@PathVariable String id, @RequestBody ApproveRequest request) {
+        if (request.approver() == null || request.approver().isBlank()) {
+            throw new IllegalArgumentException("approver is required");
+        }
+        LoanService loan = find(id);
+        loan.approve(new User(request.approver(), Role.APPROVER));
+        return toResponse(id, loan);
+    }
+
+    // The money is paid out and the repayment period starts
+    @PostMapping("/loans/{id}/disburse")
+    public LoanResponse disburse(@PathVariable String id) {
+        LoanService loan = find(id);
+        loan.disburse();
+        return toResponse(id, loan);
     }
 
     private LoanService find(String id) {
