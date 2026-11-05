@@ -3,6 +3,7 @@ package com.loanworkflow.loan;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.time.Clock;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
@@ -11,11 +12,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.loanworkflow.approval.Role;
 import com.loanworkflow.approval.User;
+import com.loanworkflow.repayment.AnnuityStrategy;
+import com.loanworkflow.repayment.FixedPrincipalStrategy;
+import com.loanworkflow.repayment.Installment;
+import com.loanworkflow.repayment.RepaymentStrategy;
 import com.loanworkflow.scoring.CreditProfile;
 import com.loanworkflow.scoring.RuleBasedScoringStrategy;
 import com.loanworkflow.scoring.ScoreResult;
@@ -92,6 +98,26 @@ public class LoanController {
         LoanService loan = find(id);
         loan.disburse();
         return toResponse(id, loan);
+    }
+
+    // Repayment plan for an approved loan. method = annuity or fixed-principal.
+    @GetMapping("/loans/{id}/schedule")
+    public List<Installment> schedule(@PathVariable String id,
+                                      @RequestParam(defaultValue = "annuity") String method,
+                                      @RequestParam BigDecimal rate,
+                                      @RequestParam int months) {
+        if (rate.signum() < 0 || months <= 0) {
+            throw new IllegalArgumentException("rate must not be negative and months must be positive");
+        }
+        return find(id).repaymentSchedule(strategyFor(method), rate, months);
+    }
+
+    private static RepaymentStrategy strategyFor(String method) {
+        return switch (method) {
+            case "annuity" -> new AnnuityStrategy();
+            case "fixed-principal" -> new FixedPrincipalStrategy();
+            default -> throw new IllegalArgumentException("method must be annuity or fixed-principal");
+        };
     }
 
     private LoanService find(String id) {
