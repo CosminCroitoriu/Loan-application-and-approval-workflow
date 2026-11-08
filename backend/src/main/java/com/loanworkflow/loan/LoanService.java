@@ -47,10 +47,6 @@ public class LoanService {
         return scoreResult;
     }
 
-    public BigDecimal amount() {
-        return amount;
-    }
-
     // Step 1: an officer confirms the documents are complete
     public void checkDocuments() {
         loan.moveTo(LoanStatus.DOCUMENTS_CHECKED);
