@@ -39,6 +39,10 @@ public class LoanService {
         return loan;
     }
 
+    public BigDecimal amount() {
+        return amount;
+    }
+
     public ScoreResult scoreResult() {
         return scoreResult;
     }
