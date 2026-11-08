@@ -13,7 +13,9 @@ application -> document check -> credit scoring -> approval -> disbursement -> r
 Java 21 + Spring Boot (Maven), in `backend/`.
 
 - **Login**: `POST /login` checks a username and password (demo user only) and answers "user connected" or 401.
-- **Create a loan**: `POST /loans` takes an applicant and an amount and returns an id with status `SUBMITTED`. Missing applicant or an amount <= 0 returns 400. Loans are not stored yet.
+- **Create and read a loan**: `POST /loans` takes an applicant and an amount, saves the loan and returns 201 with an id and status `SUBMITTED`. `GET /loans/{id}` returns it, or 404. Missing applicant or an amount <= 0 returns 400. Loans are kept in memory for now.
+- **Loan flow over HTTP**: `POST /loans/{id}/documents`, `POST /loans/{id}/score` (body: income, debt, years employed, missed payments; HIGH risk is rejected), `POST /loans/{id}/approve` (body: approver), `POST /loans/{id}/disburse`. A step in the wrong order returns 409.
+- **Repayment schedule**: `GET /loans/{id}/schedule?method=annuity|fixed-principal&rate=12&months=12` for an approved loan.
 - **Loan status state machine**: a loan moves SUBMITTED -> DOCUMENTS_CHECKED -> SCORED -> APPROVED -> DISBURSED -> REPAYING -> CLOSED. It can be rejected before approval. Invalid moves throw an exception.
 - **Status history and listeners**: every change is recorded with the old status, the new status and the time. Listeners are notified after each change.
 - **Repayment schedules**: annuity (equal installments) and fixed-principal (equal principal, decreasing payments). The last balance is 0.
