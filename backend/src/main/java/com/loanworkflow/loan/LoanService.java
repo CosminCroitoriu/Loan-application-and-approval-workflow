@@ -7,6 +7,8 @@ import java.util.List;
 import com.loanworkflow.approval.ApprovalException;
 import com.loanworkflow.approval.ApprovalRequest;
 import com.loanworkflow.approval.User;
+import com.loanworkflow.document.DocumentCheckService;
+import com.loanworkflow.persistence.entity.DocumentEntity;
 import com.loanworkflow.repayment.Installment;
 import com.loanworkflow.repayment.RepaymentStrategy;
 import com.loanworkflow.scoring.CreditProfile;
@@ -41,8 +43,22 @@ public class LoanService {
         return scoreResult;
     }
 
+    public BigDecimal amount() {
+        return amount;
+    }
+
     // Step 1: an officer confirms the documents are complete
     public void checkDocuments() {
+        loan.moveTo(LoanStatus.DOCUMENTS_CHECKED);
+    }
+
+    // Step 1 (validated): verifies that all required documents for loanType and amount are valid
+    public void checkDocuments(
+            DocumentCheckService checkService,
+            LoanType loanType,
+            List<DocumentEntity> documents
+    ) {
+        checkService.verifyDocuments(loanType, amount, documents);
         loan.moveTo(LoanStatus.DOCUMENTS_CHECKED);
     }
 
