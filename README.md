@@ -28,6 +28,14 @@ mvn spring-boot:run
 mvn test
 ```
 
+### Database setup
+- **Default (Local development & tests)**: Uses in-memory **H2**. H2 console is available at `http://localhost:8080/h2-console` (JDBC URL: `jdbc:h2:mem:loandb`, user `sa`, empty password).
+- **Production (PostgreSQL)**: To run PostgreSQL locally:
+  ```
+  docker compose up -d
+  mvn spring-boot:run -Dspring-boot.run.profiles=prod
+  ```
+
 ## Structure
 - `backend/` - Spring Boot backend (API and business logic)
 - `frontend/` - Angular web client (see `frontend/README.md`)
